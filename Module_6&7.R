@@ -124,3 +124,95 @@ s <- d %>%
 s
 
 ## Module 7
+install.packages("sciplot")
+x <- c(1,2,3,4,5,6,7,8,9,10,25,50,100,200,1000)
+gm1 <- function(x){prod(x)^(1/length(x))}
+gm1(x)
+gm2 <- function(x){exp(mean(log(x)))}
+gm2(x)
+
+ss1 <- function(x){sum((x-mean(x))^2)}
+ss1(x)
+
+ss2 <- function(x){sum(x^2) - length(x)*mean(x)^2}
+ss2(x)
+
+ss3 <- function(x){sum(x^2) - (sum(x))^2/length(x)}
+ss3(x)
+
+pop_v <- function(x){sum((x-mean(x))^2)/(length(x))}
+pop_v(x)
+
+sample_v <- function (x){sum((x-mean(x))^2)/(length(x)-1)}
+sample_v(x)
+
+plot(c(0, 50), c(0, 15), type="n", xlab= "Sample size", ylab="Variance")
+for (n in seq(5,50,5))
+  # samples of 5, 10, 15...
+{
+  for(i in 1:50)
+    # 50 replicates
+  {
+    x<- rnorm(n=50, mean=10 ,sd=2)
+    points(n,var(x))
+  }
+}
+## this didn't immediately work lol
+
+pop_sd <- function(x){sqrt(pop_v(x))}
+pop_sd(x)
+sample_sd <- function(x){sqrt(sample_v(x))}
+sample_sd(x)
+
+SE1 <- function(x){sqrt(sample_v(x)/length(x))}
+SE1(x)
+
+SE2 <- function(x){sqrt(var(x)/length(x))}
+SE2(x)
+
+library(sciplot)
+se(x)
+
+set.seed(1)
+x <- rnorm(10000,0,1)
+hist(x)
+
+x<-seq(from = -4, to = 4, by = 0.01)
+plot(x,dnorm(x), cex=0.4)
+
+plot(x,pnorm(x), cex=0.4)
+x<-seq(from = 0, to = 1, by = 0.01)
+plot(qnorm(x),x,cex=0.4)
+
+x <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)
+m <- mean(x)
+n <- length(x)
+v <- var(x)
+s <- sd(x)
+e <- sqrt(v/n)
+upper <- mean(x) + qnorm(0.975, mean=0, sd=1)*se(x)
+lower <- mean(x) + qnorm(0.025, mean=0, sd=1)*se(x) # or lower <- mean(x) - qnorm(0.975)*se(x)
+ci <- c(lower,upper)
+ci
+
+upper <- m + qnorm(0.975, mean=0, sd=1)*e
+lower <- m + qnorm(0.025, mean=0, sd=1)*e # or lower <- m - qnorm(0.975)*e
+ci <- c(lower,upper)
+ci
+
+normalCI = function(x, CIlevel = 0.95) {
+  upper = m + qnorm(1 - (1 - CIlevel)/2) * sqrt(var(x)/length(x))
+  lower = m + qnorm((1 - CIlevel)/2) * sqrt(var(x)/length(x))
+  ci <- c(lower, upper)
+  return(ci)
+}
+normalCI(x, 0.95)
+
+set <- NULL # sets up a dummy variable to hold our 10000 simulations
+n <- 50
+for (i in 1:10000){
+  set[i] <- mean(sample(x, n, replace=TRUE))
+}
+
+quantile(set)
+quantile(set, c(0.025, 0.975))
