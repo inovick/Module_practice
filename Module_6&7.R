@@ -1,3 +1,4 @@
+## Module 6
 install.packages("dplyr")
 install.packages("ggplot2")
 install.packages("tidyverse")
@@ -74,3 +75,52 @@ p <- p + xlab("log(Female Body Mass)") + ylab("log(Female Brain Size)") # then w
 p <- p + geom_point() # then we make a scatterplot
 p <- p + theme(legend.position="bottom", legend.title=element_blank()) # then we modify the legend
 p # and, finally, we plot the object
+
+p <- p + facet_wrap(~ Family, ncol=4)
+p <- p + theme(legend.position="none")
+p
+p <- p + geom_smooth(method="lm", fullrange=TRUE)
+p
+
+p <- ggplot(data=d, aes(x=log(Body_mass_female_mean),
+                        y=log(MaxLongevity_m)
+))
+p <- p + geom_point()
+p <- p + geom_smooth(method="lm")
+p
+
+aggregate(d$Body_mass_female_mean~d$Family, FUN = "mean", na.rm = TRUE)
+aggregate(x = d["Body_mass_female_mean"], by = d["Family"], FUN = "mean", na.rm = TRUE)
+library(dplyr)
+
+s <- filter(d, Family == "Hominidae" & Mass_Dimorphism > 2)
+head(s)
+
+s <- arrange(d, Family, Genus, Body_mass_male_mean) # rearranging a data frame...
+head(s)
+s <- select(d, Family, Genus, Body_mass_male_mean) # selecting specific columns...
+head(s)
+s <- rename(d,"Female_Mass" = Body_mass_female_mean)
+head(s$Female_Mass)
+s <- mutate(d, "Binomial" = paste(Genus, Species, sep=" "))
+head(s$Binomial)
+s <- summarise(d,
+               avgF = mean(Body_mass_female_mean, na.rm=TRUE),
+               avgM = mean(Body_mass_male_mean, na.rm=TRUE))
+s
+byFamily <- group_by(d, Family)
+byFamily
+s <- summarise(byFamily,
+               avgF = mean(Body_mass_female_mean, na.rm=TRUE),
+               avgM = mean(Body_mass_male_mean, na.rm=TRUE))
+s
+s <- d %>% 
+  mutate(Binomial = paste(Genus, Species, sep=" ")) %>%
+  select(Binomial, Family, Body_mass_female_mean, Body_mass_male_mean, Mass_Dimorphism) %>%
+  group_by(Family) %>%
+  summarise(avgF = mean(Body_mass_female_mean, na.rm=TRUE),
+            avgM = mean(Body_mass_male_mean, na.rm=TRUE),
+            avgBMD = mean(Mass_Dimorphism, na.rm=TRUE))
+s
+
+## Module 7
