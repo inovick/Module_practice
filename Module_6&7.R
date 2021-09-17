@@ -3,7 +3,11 @@ install.packages("dplyr")
 install.packages("ggplot2")
 install.packages("tidyverse")
 library(curl)
-read.csv("countrydata_2016")
+load("countrydata_2016")
+read.csv("/Users/izzynovick/Desktop/BI588_Fall_2021/Module_practice/countrydata_2016")
+getwd()
+#oh I get why because this isn't where this is located in my computer got it got it
+
 f <- curl("countrydata_2016")
 f
 d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
@@ -17,13 +21,19 @@ head(d)
 
 summary(d)
 names(d)
+
+##challenge 1
 summary(countrydata_2016)
 ##Median population size :4.912e+06
 ##Median area: 69700
+
+#creating the density column in the d dataframe
 d$density <- d$population/d$area
 d <- d[order(-d$density),]
 d[1:10,]
-d <- d[order(d$density),]
+
+d <- d[order(d$area),]
+
 d[1:10,]
 new <- d[grep("^[A-F]", d$country),]
 summary(new)
