@@ -1,0 +1,95 @@
+---
+title: "Module_8"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+install.packages("manipulate")
+library(manipulate)
+outcomes <- c(1, 2, 3, 4, 5, 6)
+manipulate(hist(sample(outcomes, n, replace = TRUE), breaks = c(0.5, 1.5, 2.5,
+    3.5, 4.5, 5.5, 6.5), probability = TRUE, main = paste("Histogram of Outcomes of ",
+    n, " Die Rolls", sep = ""), xlab = "roll", ylab = "probability"), n = slider(0,
+    10000, initial = 100, step = 100))
+```
+
+## Challenge 1- Write a function to simulate rolling a die where you pass the number of rolls as an argument. Then, use your function to simulate rolling two dice 1000 times and take the sum of the rolls. Plot a histogram of those results.
+
+```{r}
+nrolls <- 1000
+roll <- function(x) {
+    sample(1:6, x, replace = TRUE)
+}
+two_dice <- roll(nrolls) + roll(nrolls)
+hist(two_dice, breaks = c(1.5:12.5), probability = TRUE, main = "Rolling Two Dice",
+    xlab = "sum of rolls", ylab = "probability")
+```
+## Random Variables
+```{r}
+outcomes <- c("heads", "tails")
+prob <- c(1/2, 1/2)
+barplot(prob, ylim = c(0, 0.6), names.arg = outcomes, space = 0.1, xlab = "outcome",
+    ylab = "Pr(X = outcome)", main = "Probability Mass Function")
+```
+## Cumulative probability
+```{r}
+cumprob <- cumsum(prob)
+barplot(cumprob, names.arg = outcomes, space = 0.1, xlab = "outcome", ylab = "Cumulative Pr(X)",
+    main = "Cumulative Probability")
+```
+
+## Probability Mass Function
+```{r}
+outcomes <- c(1, 2, 3, 4, 5, 6)
+prob <- c(1/6, 1/6, 1/6, 1/6, 1/6, 1/6)
+barplot(prob, ylim = c(0, 0.5), names.arg = outcomes, space = 0.1, xlab = "outcome",
+    ylab = "Pr(X = outcome)", main = "Probability Mass Function")
+```
+## Cumulative probability
+```{r}
+cumprob <- cumsum(prob)
+barplot(cumprob, names.arg = outcomes, space = 0.1, xlab = "outcome", ylab = "Cumulative Pr(X)",
+    main = "Cumulative Probability")
+```
+
+## Beta Distribution and probability density functions
+```{r}
+library(ggplot2)
+a <- 2
+b <- 1
+K <- 2
+x <- seq(from = 0, to = 1, by = 0.025)
+fx <- K * x^(a - 1) * (1 - x)^(b - 1)
+lower_x <- seq(from = -0.25, to = 0, by = 0.025)  # add some values of x less than zero
+upper_x <- seq(from = 1, to = 1.25, by = 0.025)  # add some values of x greater than one
+lower_fx <- rep(0, 11)  # add fx=0 values to x<0
+upper_fx <- rep(0, 11)  # add fx=0 values to x>1
+x <- c(lower_x, x, upper_x)  # paste xs together
+fx <- c(lower_fx, fx, upper_fx)  # paste fxs together
+d <- as.data.frame(cbind(x, fx))
+p <- ggplot(data = d, aes(x = x, y = fx)) + xlab("x") + ylab("f(x)") + geom_line()
+p
+```
+
+## Cumulative probability integrated across f(x) from −inf to x.
+```{r}
+library(manipulate)
+manipulate(ggplot(data = d, aes(x = x, y = fx)) + xlab("x") + ylab("f(x)") +
+    geom_line() + geom_polygon(data = data.frame(xvals = c(0, n, n, 0), fxvals = c(0,
+    K * n^(a - 1) * (1 - n)^(b - 1), 0, 0)), aes(x = xvals, y = fxvals)) + ggtitle(paste("Area Under Function = ",
+    0.5 * n * K * n^(a - 1) * (1 - n)^(b - 1), sep = " ")), n = slider(0, 1,
+    initial = 0.5, step = 0.01))
+```
+
+## The cumulative distribution function, or CDF, of a random variable is defined as the probability of observing a random variable X taking the value of x or less, i.e., F(x) = Pr (X ≤ x)
+```{r}
+x <- seq(from = 0, to = 1, by = 0.005)
+prob <- 0.5 * x * K * x^(a - 1) * (1 - x)^(b - 1)
+barplot(prob, names.arg = x, space = 0, main = "Cumulative Probability", xlab = "x",
+    ylab = "Pr(X ≤ x)")
+```
