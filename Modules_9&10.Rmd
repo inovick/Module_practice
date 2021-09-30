@@ -174,5 +174,217 @@ ci_t
 
 ### Module 10
 ```{r}
+library(curl)
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/vervet-weights.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+mean(d$weight)
+mu <- 4.9
+x <- d$weight
+m <- mean(x)
+s <- sd(x)
+n <- length(x)
+sem <- s/sqrt(n)
+
+z <- (m - mu)/sem
+z
+```
+
+## If we then want to see if z is significant, we need to calculate the probability of seeing a deviation from the mean as high or higher than this by chance. To do this, we can use the pnorm() function. Because we have converted our sample mean to the standard normal scale, the mean= and sd= arguments of pnorm() are the defaults of 0 and 1, respectively. We want the probability of seeing a z this large or larger by chance.
+```{r}
+p <- 1 - pnorm(z)
+p
+p <- pnorm(z, lower.tail = FALSE)
+p
+
+p <- 1 - pt(z, df = n - 1)
+p
+
+p <- pt(z, df = n - 1, lower.tail = FALSE)
+p
+```
+
+## R has built into it a single function, t.test(), that lets us do all this in one line. We give it our data and the expected population mean, μ, along with the kind of test we want to do.
+```{r}
+t <- t.test(x = x, mu = mu, alternative = "greater")
+t
+# Note that we can also use the t.test() function to calculate t distribution based CIs for us easily!
+lower <- m - qt(1 - 0.05/2, df = n - 1) * sem
+upper <- m + qt(1 - 0.05/2, df = n - 1) * sem
+ci <- c(lower, upper)
+ci  # by hand
+
+t <- t.test(x = x, mu = mu, alternative = "two.sided")
+ci <- t$conf.int
+ci  # using t test
+```
+
+## CHALLENGE 1: Adult lowland woolly monkeys are reported to have an average body weight of 7.2 kilograms. You are working with an isolated population of woolly monkeys from the Peruvian Andes that you think may be a different species from the lowland form, and you collect a sample of 15 weights from adult individuals at that site. From your sample, you calculate a mean of 6.43 kilograms and a standard deviation of 0.98 kilograms. Perform a hypothesis test of whether body weights in your population are different from the reported average for lowland woolly monkeys by setting up a “two-tailed” hypothesis, carrying out the analysis, and interpreting the p value (assume the significance level is α=0.05). Your sample is < 30, so you should use the t distribution and do a t test. Do your calculations both by hand and using the t.test() function and confirm that they match.
+```{r}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/woolly-weights.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+
+x <- d$weight
+m <- mean(x)
+s <- sd(x)
+n <- length(x)
+sem <- s/sqrt(n)
+mu <- 7.2
+t <- (m - mu)/sem
+t
+
+alpha <- 0.05
+crit <- qt(1 - alpha/2, df = n - 1)  # identify critical values
+test <- t < -crit || t > crit  # boolean test as to whether t is larger than the critical value at either tail
+test <- abs(t) > crit
+t.test(x = x, mu = mu, alternative = "two.sided")
+```
+
+### Comparing Sample Means: Two Sample Z and T Tests
+## Challenge 2: Let’s do an example. Load in a file of black-and-white colobus weights and examine the str() of the file. Then, create 2 vectors, x and y, for male and female weights. Plot these in boxplots side by side and then calculate the mean, sd, and sample size for both males and females
+```{r}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/colobus-weights.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+
+x <- d$weight[d$sex == "male"]
+y <- d$weight[d$sex == "female"]
+par(mfrow = c(1, 2))
+boxplot(x, ylim = c(4.5, 8), main = "Weight (kg)", xlab = "Males")
+boxplot(y, ylim = c(4.5, 8), main = "Weight (kg)", xlab = "Females")
+
+m1 <- mean(x)
+m2 <- mean(y)
+mu <- 0  # you could leave this out... the default argument value is 0
+s1 <- sd(x)
+s2 <- sd(y)
+n1 <- length(x)
+n2 <- length(y)
+
+#Now calculate the t statistic and test the two-tailed hypothesis that the sample means differ.
+t <- (m2 - m1 - mu)/sqrt(s2^2/n2 + s1^2/n1)
+t
+
+alpha <- 0.05
+crit <- qt(1 - alpha/2, df = n - 1)  # identify critical values
+crit
+
+test <- t < -crit || t > crit  # boolean test
+test <- abs(t) > crit
+test
+
+#Degrees of freedom
+df <- (s2^2/n2 + s1^2/n1)^2/((s2^2/n2)^2/(n2 - 1) + (s1^2/n1)^2/(n1 - 1))
+df
+
+#Do the same using the t.test() function
+t <- t.test(x = x, y = y, mu = 0, alternative = "two.sided")
+t
+```
+
+##Samples with equal variances
+```{r}
+s <- sqrt((((n1 - 1) * s1^2) + ((n2 - 1) * s2^2))/(n1 + n2 - 2))
+t <- (m2 - m1 - mu)/(sqrt(s^2 * (1/n1 + 1/n2)))
+t
+df <- n1 + n2 - 2
+df
+t <- t.test(x = x, y = y, mu = 0, var.equal = TRUE, alternative = "two.sided")
+t
+```
+
+##Paired Samples
+#Challenge 3: Let’s play with a sample… IQs of individuals taking a certain statistics course pre and post a lecture on significance testing. Load in the iqs.csv data file, look at it, plot a barchart of values before and after and construct a paired t test to evaluate the means before and after.
+```{r}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/iqs.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+
+x <- d$IQ.before - d$IQ.after
+m <- mean(x)
+mu <- 0  # can leave this out
+s <- sd(x)
+n <- length(x)
+sem <- s/sqrt(n)
+par(mfrow = c(1, 2))
+boxplot(d$IQ.before, ylim = c(115, 145), main = "IQ", xlab = "Before")
+boxplot(d$IQ.after, ylim = c(115, 145), main = "IQ", xlab = "After")
+
+t <- (m - mu)/sem
+t
+
+alpha <- 0.05
+crit <- qt(1 - alpha/2, df = n - 1)  # identify critical values
+crit
+
+test <- t < -crit || t > crit  # boolean test
+test
+
+t.test(x, df = n - 1, alternative = "two.sided")
+```
+
+##Testing Sample Proportions: One Sample Z Test
+#Challenge 4: A neotropical ornithologist working in the western Amazon deploys 30 mist nets in a 100 hectare (ha) grid. She monitors the nets on one morning and records whether or not a she captures any birds in the net (i.e., a “success” or “failure” for every net during a netting session). The following vector summarizes her netting results:
+```{r}
+v <- c(0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 
+    1, 1, 0, 1, 0, 1, 1)
+
+phat <- mean(v)
+phat
+
+pi <- 0.8
+n <- 30
+z <- (phat - pi)/sqrt(pi * (1 - pi)/30)
+z
+
+p <- pnorm(z, lower.tail = TRUE)
+p
+
+#Estimating 95% CI
+lower <- phat - qnorm(0.975) * sqrt(phat * (1 - phat)/30)
+upper <- phat + qnorm(0.975) * sqrt(phat * (1 - phat)/30)
+ci <- c(lower, upper)
+ci
+
+#Wald CI
+pt <- prop.test(x = sum(v), n = length(v), p = 0.8, conf.level = 0.95, correct = FALSE, 
+    alternative = "less")
+pt
+```
+
+## Comparing Sample Proportions: Two Sample Z Tests
+#Challenge 5: A biologist studying two species of tropical bats captures females of both species in a mist net over the course of week of nightly netting. For each species, the researcher records whether females are lactating or not. The two vectors below summarize the data for each species.
+```{r}
+v1 <- c(1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 
+    1, 0)
+v2 <- c(1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 
+    0, 1, 1, 0, 1, 1, 1)
+
+pstar <- (sum(v1) + sum(v2))/(length(v1) + length(v2))
+pstar
+
+phat1 <- mean(v1)
+phat1
+
+phat2 <- mean(v2)
+phat2
+
+pi <- 0
+z <- (phat2 - phat1)/sqrt((pstar * (1 - pstar)) * (1/length(v1) + 1/length(v2)))
+z
+
+p <- 1 - pnorm(z, lower.tail = TRUE) + pnorm(z, lower.tail = FALSE)
+p
+
+crit <- qnorm(1 - alpha/2)  # identify critical values
+crit
+
+test <- p < -crit || p > crit  # boolean test
+test
+
+pt <- prop.test(x = c(sum(v2), sum(v1)), n = c(length(v2), length(v1)), alternative = "two.sided", 
+    correct = FALSE)
+pt
 
 ```
