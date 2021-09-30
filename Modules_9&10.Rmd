@@ -1,0 +1,178 @@
+---
+title: "Modules_9&10"
+output: html_document
+---
+
+```{r}
+install.packages("curl")
+```
+### Module 9
+## Standard errors and confidence intervals
+```{r}
+n <- 1000
+mu <- 3.5
+sigma <- 4
+v <- rnorm(n, mu, sigma)
+s <- sample(v, size = 30, replace = FALSE)
+m <- mean(s)
+m
+
+sd <- sd(s)
+sd
+
+sem <- sd(s)/sqrt(length(s))
+sem
+
+lower <- m - qnorm(1 - 0.05/2) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qnorm(1 - 0.05/2) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+ci <- c(lower, upper)
+ci
+```
+## Central Limit Theorem
+```{r}
+lambda <- 14
+n <- 10
+pop_se <- sqrt(lambda/n)  # the estimated SE
+pop_se
+
+x <- NULL
+for (i in 1:1000) {
+    x[i] <- mean(rpois(n = n, lambda = lambda))
+}
+hist(x, breaks = seq(from = lambda - 4 * sqrt(lambda)/sqrt(n), to = lambda + 
+    4 * sqrt(lambda)/sqrt(n), length.out = 20), probability = TRUE)
+
+sd <- sd(x)  # st dev of the sampling distribution
+sd
+# I've been getting numbers that are slightly off from the original results in the module. Why?
+
+qqnorm(x)
+qqline(x)
+```
+## Repeat but with samples size of 100
+```{r}
+n <- 100
+pop_se <- sqrt(lambda/n)  # the estimated SE
+pop_se
+
+x <- NULL
+for (i in 1:1000) {
+    x[i] <- mean(rpois(n = n, lambda = lambda))
+}
+hist(x, breaks = seq(from = lambda - 4 * sqrt(lambda)/sqrt(n), to = lambda + 
+    4 * sqrt(lambda)/sqrt(n), length.out = 20), probability = TRUE)
+
+sd <- sd(x)  # st dev of the sampling distribution
+sd
+
+qqnorm(x)
+qqline(x)
+```
+## Converting distribution to standard normal
+```{r}
+curve(dnorm(x, 0, 1), -4, 4, ylim = c(0, 0.8))
+z <- (x - lambda)/pop_se
+hist(z, breaks = seq(from = -4, to = 4, length.out = 20), probability = TRUE, 
+    add = TRUE)
+
+# now using sum() instead of mean()
+n <- 100
+x <- NULL
+for (i in 1:1000) {
+    x[i] <- sum(rpois(n = n, lambda = lambda))
+}
+hist(x, breaks = seq(min(x), max(x), length.out = 20), probability = TRUE)
+```
+## Challenge 1: Suppose a polling group in the Massachusetts is interested in the proportion of voting-age citizens in their state that already know they will vote for Elizabeth Warren in the upcoming November 6, 2018 midterm elections. The group obtains a yes or no answer from 1000 suitable randomly selected individuals. Of these individuals, 856 say they know they’ll vote for Senator Warren. How would we characterize the mean and variability associated with this proportion?
+```{r}
+n <- 1000
+x <- 856
+phat <- x/n  # our estimate of pi
+phat
+# Are n×π and n×(1−π) both > 5? Yes!
+n * phat
+n * (1 - phat)
+pop_se <- sqrt((phat) * (1 - phat)/n)
+
+# So, what is the 95% CI around our estimate of the proportion of people who already know how they will vote?
+curve(dnorm(x, mean = phat, sd = pop_se), phat - 4 * pop_se, phat + 4 * pop_se)
+upper <- phat + qnorm(0.975) * pop_se
+lower <- phat - qnorm(0.975) * pop_se
+ci <- c(lower, upper)
+polygon(cbind(c(ci[1], seq(from = ci[1], to = ci[2], length.out = 1000), ci[2]), 
+    c(0, dnorm(seq(from = ci[1], to = ci[2], length.out = 1000), mean = phat, 
+        sd = pop_se), 0)), border = "black", col = "gray")
+abline(v = ci)
+abline(h = 0)
+```
+
+## Small sample confidence intervals
+```{r}
+mu <- 0
+sigma <- 1
+curve(dnorm(x, mu, 1), mu - 4 * sigma, mu + 4 * sigma, main = "Normal Curve=red\nStudent's t=blue", 
+    xlab = "x", ylab = "f(x)", col = "red", lwd = 3)
+for (i in c(1, 2, 3, 4, 5, 10, 20, 100)) {
+    curve(dt(x, df = i), mu - 4 * sigma, mu + 4 * sigma, main = "T Curve", xlab = "x", 
+        ylab = "f(x)", add = TRUE, col = "blue", lty = 5)
+}
+
+# If we define a CI based on quantiles of the t distribution, they will be correspondingly slightly wider than those based on the normal distribution for small values of df.
+
+n <- 1e+05
+mu <- 3.5
+sigma <- 4
+x <- rnorm(n, mu, sigma)
+sample_size <- 30
+s <- sample(x, size = sample_size, replace = FALSE)
+m <- mean(s)
+m
+
+sd <- sd(s)
+sd
+
+sem <- sd(s)/sqrt(length(s))
+sem
+
+lower <- m - qnorm(1 - 0.05/2) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qnorm(1 - 0.05/2) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+ci_norm <- c(lower, upper)
+ci_norm
+```
+
+## Now, let’s look at the CIs calculated based using the t distribution for the same sample size. For sample size 30, the difference in the CIs is negligible.
+```{r}
+lower <- m - qt(1 - 0.05/2, df = sample_size - 1) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qt(1 - 0.05/2, df = sample_size - 1) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+ci_t <- c(lower, upper)
+ci_t
+```
+
+## However, if we use a sample size of 5, the CI based on the t distribution is much wider.
+```{r}
+sample_size <- 5
+s <- sample(x, size = sample_size, replace = FALSE)
+m <- mean(s)
+m
+
+sd <- sd(s)
+sd
+
+sem <- sd(s)/sqrt(length(s))
+sem
+
+lower <- m - qnorm(1 - 0.05/2) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qnorm(1 - 0.05/2) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+ci_norm <- c(lower, upper)
+ci_norm
+
+lower <- m - qt(1 - 0.05/2, df = sample_size - 1) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+upper <- m + qt(1 - 0.05/2, df = sample_size - 1) * sem  # (1-alpha)/2 each in the upper and lower tails of the distribution
+ci_t <- c(lower, upper)
+ci_t
+```
+
+### Module 10
+```{r}
+
+```
