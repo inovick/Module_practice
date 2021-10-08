@@ -172,7 +172,7 @@ ci_t <- c(lower, upper)
 ci_t
 ```
 
-### Module 10
+### Module 10 ####
 ```{r}
 library(curl)
 f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/vervet-weights.csv")
@@ -388,44 +388,7 @@ pt <- prop.test(x = c(sum(v2), sum(v1)), n = c(length(v2), length(v1)), alternat
 pt
 
 ```
-###Challenge
-```{r}
-library("ggplot2")
 
-n <- 100
-x <- NULL
-for (i in 1:1000) {
-    x[i] <- sum(rpois(n = n, lambda = lambda))
-}
-hist(x, breaks = seq(min(x), max(x), length.out = 20), probability = TRUE)
-n <- 1000
-x <- 856
-phat <- x/n  # our estimate of pi
-phat
 
-n * phat
-n * (1 - phat)
-pop_se <- sqrt((phat) * (1 - phat)/n)
 
-curve(dnorm(x, mean = phat, sd = pop_se), phat - 4 * pop_se, phat + 4 * pop_se)
-upper <- phat + qnorm(0.975) * pop_se
-lower <- phat - qnorm(0.975) * pop_se
-ci <- c(lower, upper)
-polygon(cbind(c(ci[1], seq(from = ci[1], to = ci[2], length.out = 1000), ci[2]),
-    c(0, dnorm(seq(from = ci[1], to = ci[2], length.out = 1000), mean = phat,
-        sd = pop_se), 0)), border = "black", col = "gray")
-abline(v = ci)
-abline(h = 0)
-```
 
-##Small sample confidence intervals
-```{r}
-mu <- 0
-sigma <- 1
-curve(dnorm(x, mu, 1), mu - 4 * sigma, mu + 4 * sigma, main = "Normal Curve=red\nStudent's t=blue",
-    xlab = "x", ylab = "f(x)", col = "red", lwd = 3)
-for (i in c(1, 2, 3, 4, 5, 10, 20, 100)) {
-    curve(dt(x, df = i), mu - 4 * sigma, mu + 4 * sigma, main = "T Curve", xlab = "x",
-        ylab = "f(x)", add = TRUE, col = "blue", lty = 5)
-}
-```
