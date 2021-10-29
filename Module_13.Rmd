@@ -1,0 +1,85 @@
+---
+title: "Module_13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(curl)
+install.packages("car")
+library(car)
+```
+
+```{r}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/zombies.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+```
+
+##Running a bivariate regression model
+```{r}
+m <- lm(data = d, height ~ weight)
+SSY <- sum((m$model$height - mean(m$model$height))^2)  # height - mean(height)
+SSY
+
+SSR <- sum((m$fitted.values - mean(m$model$height))^2)  # predicted height - mean height
+SSR
+
+SSE <- sum((m$model$height - m$fitted.values)^2)  # height - predicted height
+SSE
+
+df_regression <- 1
+df_error <- 998
+df_y <- 999
+MSR <- SSR/df_regression
+MSE <- SSE/df_error
+MSY <- SSY/df_y
+
+fratio <- MSR/MSE
+fratio
+```
+
+##We can test the overall significance of our regression model by evaluating our F ratio test statistic against the F distribution, taking into account the number of degrees of freedom in each. The F distribution is a continuous probability distribution, defined for x≥0 and governed by two parameters, df1 and df2. The critical value above which we would reject the idea that the variance in our two sources is comparable is given by qf(p,df1,df2), where p is 1-α and df1 and df2 are the degrees of freedom in the sources being compared (regression versus error).
+```{r}
+curve(df(x, df = 1, df2 = 1), col = "green", lty = 3, lwd = 2, xlim = c(0, 10),
+    main = "Some Example F Distributions\n(vertical line shows critical value for df1=1,df2=998)",
+    ylab = "f(x)", xlab = "x")
+curve(df(x, df = 2, df2 = 2), col = "blue", lty = 3, lwd = 2, add = TRUE)
+curve(df(x, df = 4, df2 = 4), col = "red", lty = 3, lwd = 2, add = TRUE)
+curve(df(x, df = 8, df2 = 6), col = "purple", lty = 3, lwd = 2, add = TRUE)
+curve(df(x, df = 1, df2 = 998), col = "black", lwd = 3, add = TRUE)
+legend("top", c("df1=1,df2=1", "df1=2,df2=2", "df1=4,df2=4", "df1=8,df2=6",
+    "df1=1,df2=998"), lty = 3, lwd = 2, col = c("green", "blue", "red", "purple",
+    "black"), bty = "n", cex = 0.75)
+
+fcrit <- qf(p = 0.95, df1 = 1, df2 = 998)
+fcrit
+
+#Graphing:
+polygon(cbind(c(fcrit, seq(from = fcrit, to = 10, length.out = 1000), 8), c(0,
+    df(seq(from = fcrit, to = 8, length.out = 1000), df1 = 1, df2 = 998), 0)),
+    border = "black", col = "grey")
+abline(v = fcrit)
+abline(h = 0)
+1 - pf(q = fratio, df1 = 1, df2 = 998)
+
+a <- aov(data = d, height ~ weight)
+summary(a)
+
+summary.aov(m)
+
+rsquared <- SSR/SSY
+rsquared
+
+rho <- sqrt(rsquared)
+rho
+```
+
+##Standard error of regression coefficients
+```{r}
+SSX <- sum((m$model$weight - mean(m$model$weight))^2)
+SEbeta1 <- sqrt(MSE/SSX)
+SEbeta1
+```
