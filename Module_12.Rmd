@@ -222,4 +222,56 @@ g <- g + geom_line(aes(x = x, y = CIlwr), colour = "blue")
 g <- g + geom_line(aes(x = x, y = CIupr), colour = "blue")
 g
 ```
+##The same predict() function also allows us to easily generate prediction intervals for values of y at each x.
+```{r}
+pi <- predict(m, newdata = data.frame(weight = 150), interval = "prediction",
+    level = 0.95)  # for a single value
+pi
+
+pi <- predict(m, newdata = data.frame(weight = d$weight), interval = "prediction",
+    level = 0.95)  # for a vector of values
+head(pi)
+
+df <- cbind(df, pi)
+names(df) <- c("x", "y", "yhat", "CIfit", "CIlwr", "CIupr", "PIfit", "PIlwr",
+    "PIupr")
+head(df)
+
+g <- g + geom_line(data = df, aes(x = x, y = PIlwr), colour = "red")
+g <- g + geom_line(data = df, aes(x = x, y = PIupr), colour = "red")
+g
+```
+##Challenge 5: Construct a linear model for the regression of zombie height on age and predict the mean height, the 95% confidence interval (CI) around the predicted mean height, and the 95% prediction interval (PI) around that mean for a vector of zombie ages, v <- seq(from=10, to=30, by=1). Then, plot your points, your regression line, and lines for the lower and upper limits of the CI and of the PI.
+```{r}
+v <- seq(from = 10, to = 30, by = 1)
+m <- lm(data = d, height ~ age)
+ci <- predict(m, newdata = data.frame(age = v), interval = "confidence", level = 0.95)
+pi <- predict(m, newdata = data.frame(age = v), interval = "prediction", level = 0.95)
+plot(data = d, height ~ age)
+lines(x = v, y = ci[, 1], col = "black")
+lines(x = v, y = ci[, 2], col = "blue")
+lines(x = v, y = ci[, 3], col = "blue")
+lines(x = v, y = pi[, 2], col = "red")
+lines(x = v, y = pi[, 3], col = "red")
+```
+```{r}
+# or
+require(gridExtra)
+require(ggplot2)
+df <- data.frame(cbind(v, ci, pi))
+names(df) <- c("age", "CIfit", "CIlwr", "CIupr", "PIfit", "PIlwr", "PIupr")
+head(df)
+
+g1 <- ggplot(data = d, aes(x = age, y = height))
+g1 <- g1 + geom_point(alpha = 1/2)
+g1 <- g1 + geom_line(data = df, aes(x = v, y = CIfit), colour = "black", lwd = 1)
+g1 <- g1 + geom_line(data = df, aes(x = v, y = CIlwr), colour = "blue")
+g1 <- g1 + geom_line(data = df, aes(x = v, y = CIupr), colour = "blue")
+g1 <- g1 + geom_line(data = df, aes(x = v, y = PIlwr), colour = "red")
+g1 <- g1 + geom_line(data = df, aes(x = v, y = PIupr), colour = "red")
+g2 <- ggplot(data = d, aes(x = age, y = height))
+g2 <- g2 + geom_point(alpha = 1/2)
+g2 <- g2 + geom_smooth(method = "lm", formula = y ~ x)
+grid.arrange(g1, g2, ncol = 2)
+```
 
