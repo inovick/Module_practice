@@ -53,3 +53,11 @@ levels(z$occupation)
 
 plot(data = z, zombies_killed ~ occupation)
 ```
+
+#linear regression
+```{r}
+m <- lm(data = z, zombies_killed ~ occupation)
+summary(m)
+p <- 1 - pf(0.526, df1 = 3, df2 = 996)  # F test
+p
+```
